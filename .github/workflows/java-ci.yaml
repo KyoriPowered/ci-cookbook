@@ -49,47 +49,14 @@ on:
         type: string
         default: ''
     secrets:
-      SONATYPE_USERNAME:
-        description: 'Kyori OSSRH Username'
-        required: false
-      SONATYPE_PASSWORD:
-        description: 'Kyori OSSRH Password'
-        required: false
-      STELLARDRIFT_USERNAME:
-        description: 'Kyori Stellardrift Repository Username'
-        required: false
-      STELLARDRIFT_PASSWORD:
-        description: 'Kyori Stellardrift Repository Password'
-        required: false
-      PAPERMC_USERNAME:
-        description: 'Kyori PaperMC Repository Username'
-        required: false
-      PAPERMC_PASSWORD:
-        description: 'Kyori PaperMC Repository Password'
-        required: false
-      KYORI_REPO_USERNAME:
-        description: 'Kyori Repository Username'
-        required: false
-      KYORI_REPO_PASSWORD:
-        description: 'Kyori Repository Password'
-        required: false
-      KYORI_GPG_KEY:
-        description: 'Kyori GPG signing key'
-        required: false
-      KYORI_GPG_PASSWORD:
-        description: 'Kyori GPG signing password'
+      publishing_env_vars:
+        description: extra env file for any environment to apply to publishing commands
         required: false
       DEPLOYMENT_APP_ID:
         description: 'App id for JD publisher'
         required: false
       DEPLOYMENT_APP_SECRET:
         description: 'App key for JD publisher'
-        required: false
-      KYORI_PLUGIN_PORTAL_API_KEY:
-        description: 'Kyori Gradle Plugin Portal API key'
-        required: false
-      KYORI_PLUGIN_PORTAL_API_SECRET:
-        description: 'Kyori Gradle Plugin Portal API secret'
         required: false
 
 concurrency:
@@ -141,28 +108,18 @@ jobs:
           fi
       - name: "publish snapshot"
         if: "${{ runner.os == 'Linux' && env.STATUS != 'release' && github.event_name == 'push' && steps.setup.outputs.publishing_branch != '' }}"
-        run: "./gradlew ${{ inputs.extra_gradle_params }} publish ${{ inputs.extra_gradle_publish_params }}"
         env:
-          ORG_GRADLE_PROJECT_sonatypeUsername: "${{ secrets.SONATYPE_USERNAME }}"
-          ORG_GRADLE_PROJECT_sonatypePassword: "${{ secrets.SONATYPE_PASSWORD }}"
-          ORG_GRADLE_PROJECT_stellardriftUsername: "${{ secrets.STELLARDRIFT_USERNAME }}"
-          ORG_GRADLE_PROJECT_stellardriftPassword: "${{ secrets.STELLARDRIFT_PASSWORD }}"
-          ORG_GRADLE_PROJECT_papermcUsername: "${{ secrets.PAPERMC_USERNAME }}"
-          ORG_GRADLE_PROJECT_papermcPassword: "${{ secrets.PAPERMC_PASSWORD }}"
-          ORG_GRADLE_PROJECT_kyoriSigningKey: "${{ secrets.KYORI_GPG_KEY }}"
-          ORG_GRADLE_PROJECT_kyoriSigningPassword: "${{ secrets.KYORI_GPG_PASSWORD }}"
-          ORG_GRADLE_PROJECT_kyoriUsername: "${{ secrets.KYORI_REPO_USERNAME }}"
-          ORG_GRADLE_PROJECT_kyoriPassword: "${{ secrets.KYORI_REPO_PASSWORD }}"
+          PUBLISHING_ENV: ${{ secrets.publishing_env_vars }}
+        run: |
+          eval $(echo "$PUBLISHING_ENV" | awk '{ print "export " $0 }')
+          ./gradlew ${{ inputs.extra_gradle_params }} publish ${{ inputs.extra_gradle_publish_params }}
       - name: "publish release"
         if: "${{ inputs.publish_releases && runner.os == 'Linux' && env.STATUS == 'release' && github.event_name == 'release' }}"
-        run: "./gradlew ${{ inputs.extra_gradle_params }} ${{ inputs.gradle_release_publish_tasks }} ${{ inputs.extra_gradle_publish_params }}"
         env:
-          ORG_GRADLE_PROJECT_sonatypeUsername: "${{ secrets.SONATYPE_USERNAME }}"
-          ORG_GRADLE_PROJECT_sonatypePassword: "${{ secrets.SONATYPE_PASSWORD }}"
-          ORG_GRADLE_PROJECT_kyoriSigningKey: "${{ secrets.KYORI_GPG_KEY }}"
-          ORG_GRADLE_PROJECT_kyoriSigningPassword: "${{ secrets.KYORI_GPG_PASSWORD }}"
-          ORG_GRADLE_PROJECT_pluginPortalApiKey: "${{ secrets.KYORI_PLUGIN_PORTAL_KEY }}"
-          ORG_GRADLE_PROJECT_pluginPortalApiSecret: "${{ secrets.KYORI_PLUGIN_PORTAL_SECRET }}"
+          PUBLISHING_ENV: ${{ secrets.publishing_env_vars }}
+        run: |
+          eval $(echo "$PUBLISHING_ENV" | awk '{ print "export " $0 }')
+          ./gradlew ${{ inputs.extra_gradle_params }} ${{ inputs.gradle_release_publish_tasks }} ${{ inputs.extra_gradle_publish_params }}
       - name: "copy javadoc for publication"
         if: "${{ inputs.publish_release_javadoc && runner.os == 'Linux' && env.STATUS == 'release' && github.event_name == 'release' }}"
         run: |
