@@ -1,0 +1,29 @@
+name: "tag nightly release"
+
+# Auto-tag daily (or on-demand) if there were any changes, to help downstream consumers
+on:
+  schedule: 
+    - cron: "0 1 * * *" # daily
+  workflow_dispatch:
+
+jobs:
+  fill-tags:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "checkout"
+        uses: "actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8" # v5.0.0
+      - name: "create and push tags"
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ -z "$(git tag --contains HEAD)" ]; then
+            TAG_NAME="%(date -z UTC +%Y.%m.%d)"
+            COUNT="$(git tag -l $TAG_NAME\* | wc -l)"
+            if [ "0" -eq "$COUNT" ]; then
+              git tag "$TAG_NAME"
+            else
+              git tag "$TAG_NAME.$COUNT"
+            fi
+            git push --tags origin
+          fi
