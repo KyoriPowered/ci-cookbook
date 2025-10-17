@@ -1,0 +1,69 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Standard preset across repositories for Kyori and friends",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "labels": [
+    "type: dependencies"
+  ],
+  "schedule": [
+    "after 5pm on the 2nd day of the month"
+  ],
+  "packageRules": [
+    {
+      "matchSourceUrls": [
+        "https://github.com/google/error-prone{/,}**"
+      ],
+      "groupName": "error-prone monorepo"
+    },
+    {
+      "matchPackageNames": [
+        "com.google.auto.value:{/,}**"
+      ],
+      "groupName": "auto-value monorepo"
+    },
+    {
+      "matchSourceUrls": [
+        "https://github.com/immutables/immutables{/,}**"
+      ],
+      "groupName": "immutables monorepo"
+    },
+    {
+      "matchUpdateTypes": ["patch"],
+      "matchPackageNames": ["!gradle"],
+      "groupName": "patch-release dependency changes"
+    },
+    {
+      "description": "Correct Guava version handling",
+      "matchPackageNames": ["com.google.guava:{/,}**"],
+      "versioning": "regex:^(?<major>\\d+)(\\.(?<minor>\\d+))?(\\.(?<patch>\\d+))?(-(?<compatibility>.*))?$"
+    },
+    {
+      "matchManagers": ["github-actions", "gradle-wrapper"],
+      "groupName": "gradle and github actions"
+    },
+    {
+      "matchDepTypes": ["plugin"],
+      "groupName": "gradle and github actions"
+    },
+    {
+      "matchFileNames": ["build-logic/*", "buildSrc/*"],
+      "groupName": "gradle and github actions"
+    }
+  ],
+  "pinDigest": {
+    "schedule": [
+      "at any time"
+    ],
+    "automerge": true,
+    "automergeType": "pr"
+  },
+  "pre-commit": {
+    "enabled": true
+  },
+  "prHourlyLimit": 4,
+  "semanticCommitType": "build",
+  "commitMessagePrefix": "chore(deps): "
+}
