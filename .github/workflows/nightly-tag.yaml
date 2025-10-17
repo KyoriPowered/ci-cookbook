@@ -18,7 +18,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           if [ -z "$(git tag --contains HEAD)" ]; then
-            TAG_NAME="$(date -z UTC +%Y.%m.%d)"
+            TAG_NAME="$(date -u +%Y.%m.%d)"
             COUNT="$(git tag -l $TAG_NAME\* | wc -l)"
             if [ "0" -eq "$COUNT" ]; then
               git tag "$TAG_NAME"
