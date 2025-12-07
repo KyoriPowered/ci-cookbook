@@ -98,7 +98,7 @@ jobs:
         run: "./gradlew ${{ inputs.extra_gradle_params }} build"
       - name: "archive test results"
         if: "${{ always() }}"
-        uses: "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02" # v4.6.2
+        uses: "actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4" # v5.0.0
         with:
           name: "${{ runner.os }}-test-results"
           path: |
@@ -171,7 +171,7 @@ jobs:
       contents: "write"
     steps:
       - name: "check branch for publish"
-        uses: "KyoriPowered/action-regex-match@1ff8ef914f6762fff8d5efd8d56ef88b5be5dd5c" # v4.0.0
+        uses: "KyoriPowered/action-regex-match@5684ded1f3e016437483d3d74cfa93fcdf5e313b" # v5.0.0
         id: "branch-name"
         with:
           text: "${{ github.ref }}"
