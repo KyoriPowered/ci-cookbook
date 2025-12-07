@@ -137,7 +137,7 @@ jobs:
           ./gradlew ${{ inputs.extra_gradle_params }} copyJavadoc --output build/publish-jd/${{ inputs.javadoc_deploy_prefix }}
       - name: "authenticate for javadoc publication"
         if: "${{ inputs.publish_release_javadoc && runner.os == 'Linux' && env.STATUS == 'release' && github.event_name == 'release' }}"
-        uses: "actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42" # v2.1.4
+        uses: "actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf" # v2.2.1
         id: jd-token
         with:
           app-id: "${{ secrets.DEPLOYMENT_APP_ID }}"
@@ -150,7 +150,7 @@ jobs:
         run: 'echo "user-id=$(gh api "/users/${{ steps.jd-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"'
       - name: "publish javadoc"
         if: "${{ inputs.publish_release_javadoc && runner.os == 'Linux' && env.STATUS == 'release' && github.event_name == 'release' }}"
-        uses: JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8 # v4.7.3
+        uses: JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23 # v4.7.4
         with:
           folder: build/publish-jd
           repository-name: "${{ inputs.javadoc_deploy_owner }}/${{ inputs.javadoc_deploy_repo }}"
