@@ -130,7 +130,9 @@ jobs:
         env:
           PUBLISHING_ENV: ${{ secrets.publishing_env_vars }}
         run: |
-          eval $(echo "$PUBLISHING_ENV" | awk '{ print "export " $0 }')
+          set -o allexport
+          eval $(echo "$PUBLISHING_ENV")
+          set +o allexport
           ./gradlew ${{ inputs.extra_gradle_params }} ${{ inputs.gradle_release_publish_tasks }} ${{ inputs.extra_gradle_publish_params }}
       - name: "copy javadoc for publication"
         if: "${{ inputs.publish_release_javadoc && runner.os == 'Linux' && env.STATUS == 'release' && github.event_name == 'release' }}"
