@@ -121,7 +121,9 @@ jobs:
         env:
           PUBLISHING_ENV: ${{ secrets.publishing_env_vars }}
         run: |
-          eval $(echo "$PUBLISHING_ENV" | awk '{ print "export " $0 }')
+          set -o allexport
+          eval $(echo "$PUBLISHING_ENV")
+          set +o allexport
           ./gradlew ${{ inputs.extra_gradle_params }} publish ${{ inputs.extra_gradle_publish_params }}
       - name: "publish release"
         if: "${{ inputs.publish_releases && runner.os == 'Linux' && env.STATUS == 'release' && github.event_name == 'release' }}"
