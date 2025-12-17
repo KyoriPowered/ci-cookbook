@@ -116,13 +116,12 @@ jobs:
           else
             echo "STATUS=release" >> $GITHUB_ENV
           fi
-
-          echo "$PUBLISHING_ENV" > /tmp/publishing_env_vars      
-        env:
-          PUBLISHING_ENV: ${{ secrets.publishing_env_vars }}
       - name: "publish snapshot"
         if: "${{ runner.os == 'Linux' && env.STATUS != 'release' && github.event_name == 'push' && steps.setup.outputs.publishing_branch != '' }}"
+        env:
+          PUBLISHING_ENV: ${{ secrets.publishing_env_vars }}
         run: |
+          echo "$PUBLISHING_ENV" > /tmp/publishing_env_vars 
           publishing_env_vars="$(cat /tmp/publishing_env_vars)"
           rm /tmp/publishing_env_vars
           regex='([a-zA-Z0-9_]+)="((([^"]*\\n)*[^"]*)|([^"]*))"'
@@ -136,7 +135,10 @@ jobs:
           ./gradlew ${{ inputs.extra_gradle_params }} publish ${{ inputs.extra_gradle_publish_params }}
       - name: "publish release"
         if: "${{ inputs.publish_releases && runner.os == 'Linux' && env.STATUS == 'release' && github.event_name == 'release' }}"
+        env:
+          PUBLISHING_ENV: ${{ secrets.publishing_env_vars }}
         run: |
+          echo "$PUBLISHING_ENV" > /tmp/publishing_env_vars 
           publishing_env_vars="$(cat /tmp/publishing_env_vars)"
           rm /tmp/publishing_env_vars
           regex='([a-zA-Z0-9_]+)="((([^"]*\\n)*[^"]*)|([^"]*))"'
