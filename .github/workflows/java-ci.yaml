@@ -170,7 +170,7 @@ jobs:
         run: 'echo "user-id=$(gh api "/users/${{ steps.jd-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"'
       - name: "publish javadoc"
         if: "${{ inputs.publish_release_javadoc && runner.os == 'Linux' && env.STATUS == 'release' && github.event_name == 'release' }}"
-        uses: JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23 # v4.7.4
+        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
         with:
           folder: build/publish-jd
           repository-name: "${{ inputs.javadoc_deploy_owner }}/${{ inputs.javadoc_deploy_repo }}"
