@@ -38,6 +38,11 @@ on:
         required: false
         type: boolean
         default: false
+      publish_modules_individually:
+        description: 'Whether modules should be released individually.'
+        required: false
+        type: boolean
+        default: false
       publish_release_javadoc:
         description: 'Whether to publish Javadocs on release'
         required: false
@@ -105,7 +110,7 @@ jobs:
             build/reports/
             */build/reports/
       - name: "determine status & prepare for publish"
-        if: "${{ runner.os == 'Linux' }}"
+        if: "${{ runner.os == 'Linux' && inputs.publish_modules_individually != true }}"
         run: |
           # Disable dependency graph generation after first build, plus for this step itself
           echo "GITHUB_DEPENDENCY_GRAPH_ENABLED=false" >> $GITHUB_ENV
@@ -116,6 +121,25 @@ jobs:
           else
             echo "STATUS=release" >> $GITHUB_ENV
           fi
+      - name: "determine status and released module & prepare for publish"
+        if: "${{ runner.os == 'Linux' && inputs.publish_modules_individually == true }}"
+        run: |
+          # Disable dependency graph generation after first build, plus for this step itself
+          echo "GITHUB_DEPENDENCY_GRAPH_ENABLED=false" >> $GITHUB_ENV
+          export GITHUB_DEPENDENCY_GRAPH_ENABLED=false
+
+          moduleToRelease=$(./gradlew shouldDoRelease | awk '/^do release (.*)$/ { print "-p "$3; }')
+          moduleCount=$(echo $moduleToRelease | grep -ow "\-p" | wc -l)
+          echo "::notice::Modules marked for release: $moduleToRelease"
+          if [ "$moduleCount" -eq 1 ]; then
+            echo "STATUS=release" >> $GITHUB_ENV
+            echo "MODULE_TO_RELEASE=$moduleToRelease " >> $GITHUB_ENV
+          elif [ "$moduleCount" -gt 1 ]; then
+            echo "::error::Multiple modules were marked for release. Please only release one module at a time when using publish_modules_individually."
+            exit 1
+          else
+            echo "STATUS=snapshot" >> $GITHUB_ENV
+          fi
       - name: "publish snapshot"
         if: "${{ runner.os == 'Linux' && env.STATUS != 'release' && github.event_name == 'push' && steps.setup.outputs.publishing_branch != '' }}"
         env:
@@ -125,7 +149,7 @@ jobs:
           publishing_env_vars="$(cat /tmp/publishing_env_vars)"
           rm /tmp/publishing_env_vars
           regex='([a-zA-Z0-9_]+)="((([^"]*\\n)*[^"]*)|([^"]*))"'
- 
+          
           while [[ $publishing_env_vars =~ $regex ]]; do
             var_name="${BASH_REMATCH[1]}"
             var_value="${BASH_REMATCH[2]}"
@@ -149,7 +173,7 @@ jobs:
             publishing_env_vars="${publishing_env_vars#*$var_name=\"$var_value\"}"
             export "$var_name=$var_value"
           done  
-          ./gradlew ${{ inputs.extra_gradle_params }} ${{ inputs.gradle_release_publish_tasks }} ${{ inputs.extra_gradle_publish_params }}
+          ./gradlew ${{ env.MODULE_TO_RELEASE }} ${{ inputs.extra_gradle_params }} ${{ inputs.gradle_release_publish_tasks }} ${{ inputs.extra_gradle_publish_params }}
       - name: "copy javadoc for publication"
         if: "${{ inputs.publish_release_javadoc && runner.os == 'Linux' && env.STATUS == 'release' && github.event_name == 'release' }}"
         run: |
@@ -201,4 +225,3 @@ jobs:
         if: steps.branch-name.outputs.match != ''
         with:
           dependency-graph: "download-and-submit"
-
